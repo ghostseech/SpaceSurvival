@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class TileMap {
     public static float TILE_SIZE = 64.0f;
 
-    public static final int EMPTY =11;
+    public static final int EMPTY =1;
     public static final int WALL = 2;
 
     public class Tile {

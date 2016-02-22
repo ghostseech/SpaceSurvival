@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 public class SpaceSurvival extends Game {
 
@@ -32,6 +33,7 @@ public class SpaceSurvival extends Game {
 
     public SpriteBatch batch;
     public BitmapFont mainFont;
+    public Skin skin;
 
     @Override
     public void create() {
@@ -47,6 +49,7 @@ public class SpaceSurvival extends Game {
         gameScreen = new GameScreen(this);
 
         batch = new SpriteBatch();
+        batch.setProjectionMatrix(camera.combined);
         setScreen(loadingScreen);
     }
 

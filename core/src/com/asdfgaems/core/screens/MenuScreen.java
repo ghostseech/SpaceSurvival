@@ -24,11 +24,10 @@ public class MenuScreen implements Screen {
 
     private TextButton startButton;
     private TextButton exitButton;
-    private Skin skin;
 
     public MenuScreen(SpaceSurvival app) {
         this.app = app;
-        this.stage = new Stage(new FitViewport(app.V_WIDTH, app.V_HEIGHT, app.camera));
+        this.stage = new Stage(new FitViewport(app.V_WIDTH, app.V_HEIGHT));
     }
 
     @Override
@@ -36,11 +35,6 @@ public class MenuScreen implements Screen {
         System.out.println("MENU");
         Gdx.input.setInputProcessor(stage);
         stage.clear();
-
-        this.skin = new Skin();
-        this.skin.addRegions(app.assets.get("ui/uiskin.atlas", TextureAtlas.class));
-        this.skin.add("default-font", app.mainFont);
-        this.skin.load(Gdx.files.internal("ui/uiskin.json"));
 
         initButtons();
     }
@@ -56,7 +50,7 @@ public class MenuScreen implements Screen {
     }
 
     private void initButtons() {
-        startButton = new TextButton("Play", skin, "default");
+        startButton = new TextButton("Play", app.skin, "default");
         startButton.setPosition(110, 260);
         startButton.setSize(280, 60);
         startButton.addListener(new ClickListener() {
@@ -66,7 +60,7 @@ public class MenuScreen implements Screen {
             }
         });
 
-        exitButton = new TextButton("Exit", skin, "default");
+        exitButton = new TextButton("Exit", app.skin, "default");
         exitButton.setPosition(110, 190);
         exitButton.setSize(280, 60);
         exitButton.addListener(new ClickListener() {
