@@ -1,63 +1,44 @@
 package com.asdfgaems.core.screens;
 
-import com.asdfgaems.core.GameObject;
-import com.asdfgaems.core.Inventory;
-import com.asdfgaems.core.SpaceSurvival;
-import com.asdfgaems.core.TileMap;
+import com.asdfgaems.core.*;
 import com.asdfgaems.core.objects.*;
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.maps.MapLayer;
-import com.badlogic.gdx.maps.MapObject;
-import com.badlogic.gdx.maps.MapObjects;
-import com.badlogic.gdx.maps.objects.RectangleMapObject;
-import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
-import com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject;
-import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
-
-public class GameScreen implements Screen {
+public class GameScreen extends Stage implements Screen {
     private SpaceSurvival app;
 
-    private TileMap map;
-    private Player player;
+    public World world;
 
-    private HashMap<String, GameObject> gameObjects;
+    private Table menu;
 
-    //private
-    private Stage ingameUi;
-    private Vector<Image> playerItems;
+    private Inventory worldInventory;
 
     public GameScreen(SpaceSurvival app) {
+        super(new StretchViewport(app.V_WIDTH, app.V_HEIGHT));
         this.app = app;
-        this.gameObjects = new HashMap<String, GameObject>();
-        this.ingameUi = new Stage(new StretchViewport(app.V_WIDTH, app.V_HEIGHT));
+        this.world = new World(app);
+        this.worldInventory = null;
     }
-
     @Override
     public void show() {
-        initMap();
+        this.clear();
+        world.create();
         setupUi();
-        Gdx.input.setInputProcessor(ingameUi);
+        Gdx.input.setInputProcessor(this);
+        this.addListener(new WorldClickListener(world));
     }
 
     @Override
@@ -70,85 +51,119 @@ public class GameScreen implements Screen {
         app.camera.update();
         app.batch.setProjectionMatrix(app.camera.combined);
         app.batch.begin();
-        map.draw(app.batch);
-        player.draw(app.batch);
-        for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
-            entry.getValue().draw(app.batch);
-        }
+
+        world.draw(app.batch);
+
         app.batch.end();
-        ingameUi.draw();
+        this.draw();
     }
 
     private void update(float dt) {
-        int tmpx = 0;
-        int tmpy = 0;
-        if(Gdx.input.isKeyJustPressed(Input.Keys.W)) tmpy += 1;
-        else if(Gdx.input.isKeyJustPressed(Input.Keys.S)) tmpy -= 1;
-        else if(Gdx.input.isKeyJustPressed(Input.Keys.D)) tmpx += 1;
-        else if(Gdx.input.isKeyJustPressed(Input.Keys.A)) tmpx -= 1;
+        world.update(dt);
+
 
         if(Gdx.input.isTouched()) {
-            float mouseX = ((float)Gdx.input.getX() / Gdx.graphics.getWidth() * app.V_WIDTH + app.camera.position.x - (float)app.V_WIDTH/2) / 64.0f;
-            float mouseY = ((1.0f - (float)Gdx.input.getY() / (float)Gdx.graphics.getHeight()) * app.V_HEIGHT + app.camera.position.y - (float)app.V_HEIGHT/2) / 64.0f;
-            GameObject toched = getTouchedObject((int)mouseX, (int)mouseY);
-            if(toched != null) {
-                double distToPlayer = Math.sqrt((double)((toched.x - player.x)*(toched.x - player.x) + (toched.y - player.y)*(toched.y - player.y)));
-                player.action(toched, "", distToPlayer);
+            app.camera.position.x -= (Gdx.input.getDeltaX()) * Gdx.graphics.getWidth() / app.V_WIDTH;
+            app.camera.position.y += (Gdx.input.getDeltaY()) * Gdx.graphics.getHeight() / app.V_HEIGHT;
+        }
+
+        if(Gdx.input.isTouched()) {
+            processTouch();
+        }
+
+        if(!world.isTurnProcessd) {
+            world.isTurnProcessd = true;
+            hideWorldInventory();
+        }
+        this.act(dt);
+    }
+
+    private void processTouch() {
+        GameObject touched = app.getTocuhed();
+        if(touched != null)
+            if(touched.getClass() == Chest.class) {
+                if(world.player.getDist(touched) <= 1.5f && ((Chest)touched).getLevel() == 0) {
+                    showWorldInventory(((Chest)touched).inventory);
+                }
             }
-        }
-
-        if((tmpx != 0 || tmpy != 0) && !isCollidable(player.x + tmpx, player.y + tmpy)) {
-            player.move(tmpx, tmpy);
-            processTurn();
-        }
-        app.camera.position.x = player.x * TileMap.TILE_SIZE;
-        app.camera.position.y = player.y * TileMap.TILE_SIZE;
-
-        for(int i = 0; i < player.inventory.getSize(); i++) {
-            Item cur = player.inventory.getItem(i);
-            if(cur != null) playerItems.get(i).setDrawable(new TextureRegionDrawable(new TextureRegion(cur.getTexture())));
-        }
-        ingameUi.act(dt);
     }
 
-    private void processTurn() {
-        player.processTurn();
-        for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
-            entry.getValue().processTurn();
-        }
+    private void hideInventory() {
+        world.player.inventory.getUi().addAction(Actions.moveTo(-80.0f, 60.0f, 0.5f));
+        hideWorldInventory();
+    }
+    private void hideWorldInventory() {
+        if(worldInventory != null)
+            worldInventory.getUi().addAction(Actions.sequence(
+                    Actions.moveTo(-80.0f, 60.0f, 0.5f),
+                    new Action() {
+                        @Override
+                        public boolean act(float v) {
+                            getActors().removeValue(worldInventory.getUi(), true);
+                            worldInventory = null;
+                            return true;
+                        }
+                    }));
     }
 
+    private void showInventory() {
+        world.player.inventory.getUi().clearActions();
+        world.player.inventory.updateUi();
+        world.player.inventory.getUi().addAction(Actions.moveTo(80.0f, 60.0f, 0.5f));
+    }
+    private void showWorldInventory(Inventory inv) {
+        showInventory();
+        if(worldInventory != null) this.getActors().removeValue(worldInventory.getUi(), true);
+        worldInventory = inv;
+        worldInventory.getUi().clearActions();
+        worldInventory.getUi().setPosition(-80.0f, 60.0f);
+        worldInventory.getUi().addAction(Actions.moveTo(160.0f, 60.0f, 0.5f));
+        worldInventory.getUi().getStyle().background = new TextureRegionDrawable(new TextureRegion(app.assets.get("textures/playerui.png", Texture.class)));
+        this.addActor(worldInventory.getUi());
+        Inventory.connectInventories(worldInventory, world.player.inventory);
+    }
     private void setupUi() {
-        TextButton inventoryButton = new TextButton("aaa", app.skin, "default");
-        inventoryButton.setPosition(100.0f, 100.0f);
-        inventoryButton.setSize(100.0f, 100.0f);
+        menu = new Table();
+        TextButton openInventoryButton = new TextButton("INV", app.skin, "default");
+        openInventoryButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if(world.player.inventory.getUi().getX() == -80.0f) {
+                    showInventory();
+                }
+                else {
+                    hideInventory();
+                }
+            }
+        });
 
-        playerItems = new Vector<Image>();
-        for(int i = 0; i < 10; i++) {
-            Image tmp = new Image();
-            tmp.setSize(64.0f, 64.0f);
-            playerItems.add(tmp);
-        }
+        TextButton backToMenuButton = new TextButton("MENU", app.skin, "default");
+        backToMenuButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                app.setScreen(app.menuScreen);
+            }
+        });
 
+        menu.setSize(80.0f, 400.0f);
+        menu.setPosition(0.0f, 160.0f);
+        menu.align(Align.top);
+        menu.padTop(20.0f);
+        menu.background(new TextureRegionDrawable(new TextureRegion(app.assets.get("textures/playerui.png", Texture.class))));
+        menu.add(openInventoryButton).size(64.0f, 64.0f);
+        menu.row();
+        menu.add(backToMenuButton);
 
-        Table playerTable = new Table();
-        playerTable.add(inventoryButton);
-        playerTable.setSize(1000.0f, 500.0f);
-        TextureRegionDrawable t = new TextureRegionDrawable(new TextureRegion(app.assets.get("textures/playerui.png", Texture.class)));
-        playerTable.background(t);
-        for(int i = 0; i < 10; i++) {
-            playerTable.add(playerItems.get(i));
-        }
-        ingameUi.addActor(playerTable);
+        this.addActor(menu);
 
-
-        //Label backgroundUi = new Label("", app.skin);
-        //backgroundUi.
+        world.player.inventory.getUi().setPosition(-80.0f, 60.0f);
+        world.player.inventory.getUi().getStyle().background = new TextureRegionDrawable(new TextureRegion(app.assets.get("textures/playerui.png", Texture.class)));
+        this.addActor(world.player.inventory.getUi());
     }
 
     @Override
-    public void resize(int i, int i1) {
-
+    public void resize(int w, int h) {
+        this.getViewport().update(w, h, false);
     }
 
     @Override
@@ -163,97 +178,44 @@ public class GameScreen implements Screen {
 
     @Override
     public void hide() {
-
-    }
-
-    public GameObject getTouchedObject(int x, int y) {
-        for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
-            if(entry.getValue().x == x && entry.getValue().y == y) return entry.getValue();
-        }
-        return null;
-    }
-
-    public boolean isCollidable(int x, int y) {
-        if(map.getTile(x, y).collidable) return true;
-        else {
-            for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
-                if(entry.getValue().x == x && entry.getValue().y == y && entry.getValue().collidable) return true;
-            }
-            return false;
-        }
-    }
-    private void initMap() {
-        TiledMap tiledMap;
-        int width;
-        int height;
-
-        tiledMap = new TmxMapLoader().load("maps/test_map_2.tmx");
-
-        //FLOOR INITIALIZATION
-        TiledMapTileLayer floorLayer = (TiledMapTileLayer)tiledMap.getLayers().get(0);
-        width = floorLayer.getWidth();
-        height = floorLayer.getHeight();
-
-        map = new TileMap(width, height);
-
-        for(int x = 0; x < width; x++)
-            for(int y = 0; y < height; y++) {
-                String type = floorLayer.getCell(x,y).getTile().getProperties().get("type", String.class);
-                Texture floorTexture = null;
-                if(type.equals("floor_1")) {
-                    floorTexture = app.assets.get("textures/floor_1.png", Texture.class);
-                }
-                else if(type.equals("floor_2")) floorTexture = app.assets.get("textures/floor_2.png", Texture.class);
-                map.getTile(x, y).background = floorTexture;
-            }
-        //WALLS INITIALIZATION
-        TiledMapTileLayer wallLayer = (TiledMapTileLayer)tiledMap.getLayers().get(1);
-
-        for(int x = 0; x < width; x++)
-            for(int y = 0; y < height; y++) {
-                if(wallLayer.getCell(x,y) == null) continue;
-                String type = wallLayer.getCell(x,y).getTile().getProperties().get("type", String.class);
-                Texture tiletexture = null;
-                if(type.equals("wall_1")) tiletexture = app.assets.get("textures/wall_1.png", Texture.class);
-                map.getTile(x, y).texture = tiletexture;
-                map.getTile(x, y).collidable = true;
-            }
-        //OBJECTS INITIALIZATION
-        MapObjects objects = tiledMap.getLayers().get(2).getObjects();
-
-        for(int i = 0; i < objects.getCount(); i++) {
-            MapObject object = objects.get(i);
-
-            int x = (int)(object.getProperties().get("x", Float.class) / 32.0f);
-            int y = (int)(object.getProperties().get("y", Float.class) / 32.0f) + 1;
-
-            String type = object.getProperties().get("type", String.class);
-            if(type.equals("player")) {
-                player = new Player(x, y);
-                player.inventory = new Inventory(10);
-                player.inventory.addItem(new AcessCard(1));
-                player.inventory.addItem(new AcessCard(2));
-                player.inventory.addItem(new AcessCard(3));
-            }
-            else if(type.equals("door")) {
-                int doorLevel = Integer.parseInt(object.getProperties().get("level", String.class));
-                gameObjects.put(object.getName(), new Door(x, y, doorLevel));
-            }
-            else if(type.equals("chest")) {
-                int chestLevel = Integer.parseInt(object.getProperties().get("level", String.class));
-                gameObjects.put(object.getName(), new Chest(x, y, chestLevel));
-            }
-        }
-        //for(MapObject object : objects) {
-         //   String type = object.getProperties().get("type", String.class);
-            //(TiledMapTileMapObject)object.
-            //if(type.equals("player")) player.x = (TiledMapTileMapObject)object.
-        //}
-
+        this.clear();
+        world.dispose();
+        worldInventory = null;
     }
 
     @Override
     public void dispose() {
+        this.dispose();
+    }
+    class tmpCilckListener extends ClickListener {
+        int n;
+        Inventory dest;
+        Inventory loc;
+        public tmpCilckListener(int n, Inventory loc, Inventory dest) {
+            this.n = n;
+            this.loc = loc;
+            this.dest = dest;
+        }
+        @Override
+        public void clicked(InputEvent event, float x, float y) {
+            if(getTapCount() == 1 && dest != null && loc != null) {
+                System.out.println(n);
+                dest.addItem(loc.takeItem(loc.getItem(n)));
+                Inventory tmp = dest;
+                dest = loc;
+                loc = tmp;
+            }
+        }
+    };
+    class WorldClickListener extends ClickListener {
+        World world;
+        public WorldClickListener(World world) {
+            this.world = world;
+        }
 
+        @Override
+        public void clicked(InputEvent event, float x, float y) {
+            world.click();
+        }
     }
 }

@@ -15,10 +15,13 @@ public class AcessCard extends Item {
         this.type = CARD;
         this.level = level;
         this.cost = 300;
+    }
 
-        if(level == 1) name = "CARD_1";
-        else if(level == 2) name = "CARD_2";
-        else if(level == 3) name = "CARD_3";
+    public boolean equals(Item item){
+        if(item.getClass() == AcessCard.class) {
+            return this.level == ((AcessCard)item).getLevel();
+        }
+        else return false;
     }
 
     public int getLevel() {

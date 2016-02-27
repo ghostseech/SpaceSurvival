@@ -15,6 +15,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
+import java.util.Map;
+
 public class SpaceSurvival extends Game {
 
     public static final int V_WIDTH = 1280;
@@ -69,6 +71,27 @@ public class SpaceSurvival extends Game {
         params.size = 24;
         params.color = Color.BLACK;
         mainFont = generator.generateFont(params);
+    }
+
+    public GameObject getTocuhed() {
+        float mouseX = ((float)Gdx.input.getX() / Gdx.graphics.getWidth() * V_WIDTH + camera.position.x - (float)V_WIDTH/2) / 64.0f;
+        float mouseY = ((1.0f - (float)Gdx.input.getY() / (float)Gdx.graphics.getHeight()) * V_HEIGHT + camera.position.y - (float)V_HEIGHT/2) / 64.0f;
+        int x = (int)mouseX;
+        int y = (int)mouseY;
+        for(Map.Entry<String, GameObject> entry : gameScreen.world.gameObjects.entrySet()) {
+            if(entry.getValue().x == x && entry.getValue().y == y) return entry.getValue();
+        }
+        return null;
+    }
+
+    public int getTouchedX() {
+        float mouseX = ((float)Gdx.input.getX() / Gdx.graphics.getWidth() * V_WIDTH + camera.position.x - (float)V_WIDTH/2) / 64.0f;
+        return (int)mouseX;
+    }
+
+    public int getToucedY() {
+        float mouseY = ((1.0f - (float)Gdx.input.getY() / (float)Gdx.graphics.getHeight()) * V_HEIGHT + camera.position.y - (float)V_HEIGHT/2) / 64.0f;
+        return (int)mouseY;
     }
 
     @Override

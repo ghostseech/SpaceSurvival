@@ -3,6 +3,7 @@ package com.asdfgaems.core.objects;
 import com.asdfgaems.core.GameObject;
 import com.asdfgaems.core.TileMap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Door extends GameObject {
@@ -54,6 +55,16 @@ public class Door extends GameObject {
 
     public void unlock() {
         locked = false;
+    }
+
+    public void action(GameObject actor) {
+        if(actor.getClass() == Player.class) {
+            Player player = (Player)actor;
+            if(level == 1 && player.inventory.takeItem(new AcessCard(1)) != null) locked = false;
+            else if(level == 2 && player.inventory.takeItem(new AcessCard(2)) != null) locked = false;
+            else if(level == 3 && player.inventory.takeItem(new AcessCard(3)) != null) locked = false;
+            open();
+        }
     }
 
     public void lock() {

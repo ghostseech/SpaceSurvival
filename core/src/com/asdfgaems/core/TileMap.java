@@ -13,6 +13,8 @@ public class TileMap {
         public Texture background;
         public Texture texture;
         public boolean collidable;
+        public int x;
+        public int y;
     };
 
     private Tile[][] tiles;
@@ -29,13 +31,15 @@ public class TileMap {
                 Tile tmp = new Tile();
                 tmp.collidable = false;
                 tmp.texture = null;
+                tmp.x = i;
+                tmp.y = j;
                 tiles[i][j] = tmp;
             }
         }
     }
 
     public Tile getTile(int w, int h) {
-        if(w > width || h > height) return null;
+        if(w >= width || h >= height || w < 0 || h < 0) return null;
         return tiles[w][h];
     }
 

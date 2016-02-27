@@ -8,13 +8,12 @@ public abstract class Item {
     public static final int WEAPON = 1;
     public static final int CARD = 2;
 
-    public String name;
-
     protected int type;
     protected int cost;
 
     public abstract void draw(SpriteBatch batch, float x, float y, float size);
     public abstract Texture getTexture();
+    public abstract boolean equals(Item item);
 
     public int getCost() {
         return cost;
