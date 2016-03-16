@@ -81,6 +81,9 @@ public class LoadingScreen implements Screen {
         Chest.texture_lvl_1 = app.assets.get("textures/chest_lvl_1.png", Texture.class);
         Chest.texture_lvl_2 = app.assets.get("textures/chest_lvl_2.png", Texture.class);
         Chest.texture_lvl_3 = app.assets.get("textures/chest_lvl_3.png", Texture.class);
+
+        PlayerInfoWindow.backgroundTexture = app.assets.get("textures/playerui.png", Texture.class);
+        SwapItemsWindow.backgroundTexture = app.assets.get("textures/playerui.png", Texture.class);
     }
 
     @Override

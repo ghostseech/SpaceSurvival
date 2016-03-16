@@ -31,17 +31,18 @@ public class SpaceSurvival extends Game {
     public MenuScreen menuScreen;
     public GameScreen gameScreen;
 
-
-
     public SpriteBatch batch;
     public BitmapFont mainFont;
     public Skin skin;
+
+    public World world;
 
     @Override
     public void create() {
         assets = new AssetManager();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, V_WIDTH, V_HEIGHT);
+        world = new World(this);
 
         loadFonts();
 
@@ -78,7 +79,7 @@ public class SpaceSurvival extends Game {
         float mouseY = ((1.0f - (float)Gdx.input.getY() / (float)Gdx.graphics.getHeight()) * V_HEIGHT + camera.position.y - (float)V_HEIGHT/2) / 64.0f;
         int x = (int)mouseX;
         int y = (int)mouseY;
-        for(Map.Entry<String, GameObject> entry : gameScreen.world.gameObjects.entrySet()) {
+        for(Map.Entry<String, GameObject> entry : world.gameObjects.entrySet()) {
             if(entry.getValue().x == x && entry.getValue().y == y) return entry.getValue();
         }
         return null;

@@ -3,6 +3,7 @@ package com.asdfgaems.core.objects;
 import com.asdfgaems.core.GameObject;
 import com.asdfgaems.core.Inventory;
 import com.asdfgaems.core.TileMap;
+import com.asdfgaems.core.World;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -21,7 +22,10 @@ public class Player extends GameObject {
     private Vector2 dir;
     private List<Vector2> path;
 
-    public Player(int x, int y) {
+    private float timer;
+
+    public Player(World world, int x, int y) {
+        super(world);
         this.x = x;
         this.y = y;
         this.dir = new Vector2();
@@ -29,8 +33,10 @@ public class Player extends GameObject {
     }
 
     @Override
-    public void processTurn() {
+    public float processTurn() {
+        needUpdate = false;
         if(path.size() > 0) {
+            needUpdate = true;
             Vector2 cur = path.get(0);
             int tmpx = (int)cur.x - x;
             int tmpy = (int)cur.y - y;
@@ -43,10 +49,8 @@ public class Player extends GameObject {
         y += dir.y;
 
         dir.set(0.0f, 0.0f);
-    }
 
-    public boolean isNeedProcess() {
-        return path.size() > 0;
+        return 0.5f;
     }
 
     public void move(int dirX, int dirY) {
@@ -56,6 +60,7 @@ public class Player extends GameObject {
 
     public void move(List<Vector2> path) {
         this.path = path;
+        world.requestTurnProcess();
     }
 
     public void action(GameObject object, String objectName, float dist) {

@@ -61,19 +61,26 @@
  <objectgroup name="objects">
   <object id="1" name="enemy_1" type="monster" gid="11" x="384" y="96" width="32" height="32"/>
   <object id="2" name="enemy_2" type="slime" gid="12" x="64" y="96" width="32" height="32"/>
-  <object id="3" name="player" type="player" gid="15" x="384" y="416" width="32" height="32"/>
+  <object id="3" name="player" type="player" gid="15" x="384" y="416" width="32" height="32">
+   <properties>
+    <property name="items" value="card_1 card_2 card_3"/>
+   </properties>
+  </object>
   <object id="4" name="chest_1" type="chest" gid="4" x="56" y="465" width="32" height="32">
    <properties>
+    <property name="items" value="card_3 card_1"/>
     <property name="level" value="1"/>
    </properties>
   </object>
   <object id="9" name="chest_2" type="chest" gid="5" x="98" y="465" width="32" height="32">
    <properties>
+    <property name="items" value=""/>
     <property name="level" value="2"/>
    </properties>
   </object>
   <object id="10" name="chest_3" type="chest" gid="6" x="144" y="466" width="32" height="32">
    <properties>
+    <property name="items" value="card_2 card_3"/>
     <property name="level" value="3"/>
    </properties>
   </object>

@@ -5,12 +5,20 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
 public abstract class GameObject {
+    protected World world;
+
     public int x;
     public int y;
 
     public boolean collidable;
+    public boolean needUpdate;
 
-    public abstract void processTurn();
+    public GameObject(World world) {
+        this.world = world;
+        this.needUpdate = false;
+    }
+
+    public abstract float processTurn();
     public abstract void draw(SpriteBatch batch);
     public abstract void update(float dt);
     public float getDist(GameObject object) {

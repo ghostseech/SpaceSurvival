@@ -43,4 +43,11 @@ public class AcessCard extends Item {
 
         batch.draw(texture, x * TileMap.TILE_SIZE, y * TileMap.TILE_SIZE, TileMap.TILE_SIZE, TileMap.TILE_SIZE);
     }
+
+    public String getName() {
+        return "Acess card - " + String.valueOf(level);
+    }
+    public String getDescription() {
+        return "Level:" + String.valueOf(level) + "Acess card need to unlock doors, chests, terminals";
+    }
 }

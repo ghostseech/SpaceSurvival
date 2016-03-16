@@ -14,6 +14,8 @@ public abstract class Item {
     public abstract void draw(SpriteBatch batch, float x, float y, float size);
     public abstract Texture getTexture();
     public abstract boolean equals(Item item);
+    public abstract String getName();
+    public abstract String getDescription();
 
     public int getCost() {
         return cost;

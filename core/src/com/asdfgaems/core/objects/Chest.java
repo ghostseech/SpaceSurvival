@@ -3,6 +3,7 @@ package com.asdfgaems.core.objects;
 import com.asdfgaems.core.GameObject;
 import com.asdfgaems.core.Inventory;
 import com.asdfgaems.core.TileMap;
+import com.asdfgaems.core.World;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -15,7 +16,8 @@ public class Chest extends GameObject {
 
 
     private int level;
-    public Chest(int x, int y, int level) {
+    public Chest(World world, int x, int y, int level) {
+        super(world);
         this.x = x;
         this.y = y;
         this.level = level;
@@ -24,8 +26,9 @@ public class Chest extends GameObject {
     }
 
     @Override
-    public void processTurn() {
-
+    public float processTurn() {
+        needUpdate = false;
+        return 0.0f;
     }
 
     @Override

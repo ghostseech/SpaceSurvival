@@ -20,25 +20,23 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 public class GameScreen extends Stage implements Screen {
     private SpaceSurvival app;
 
-    public World world;
-
     private Table menu;
-
-    private Inventory worldInventory;
+    private float clickTimer;
+    private PlayerInfoWindow playerPda;
+    private SwapItemsWindow swapItemsWindow;
 
     public GameScreen(SpaceSurvival app) {
         super(new StretchViewport(app.V_WIDTH, app.V_HEIGHT));
         this.app = app;
-        this.world = new World(app);
-        this.worldInventory = null;
     }
     @Override
     public void show() {
         this.clear();
-        world.create();
-        setupUi();
         Gdx.input.setInputProcessor(this);
-        this.addListener(new WorldClickListener(world));
+        this.addListener(new WorldClickListener(app.world));
+
+        setupUi();
+        clickTimer = 0.0f;
     }
 
     @Override
@@ -52,17 +50,21 @@ public class GameScreen extends Stage implements Screen {
         app.batch.setProjectionMatrix(app.camera.combined);
         app.batch.begin();
 
-        world.draw(app.batch);
+        app.world.draw(app.batch);
 
         app.batch.end();
         this.draw();
     }
 
     private void update(float dt) {
-        world.update(dt);
+        app.world.update(dt);
+        playerPda.update(dt);
+        swapItemsWindow.update(dt);
 
+        if(isAllHidden())app.world.activate();
 
-        if(Gdx.input.isTouched()) {
+        if(clickTimer > 0.0f) clickTimer -=dt;
+        if(Gdx.input.isTouched() && app.world.isActive()) {
             app.camera.position.x -= (Gdx.input.getDeltaX()) * Gdx.graphics.getWidth() / app.V_WIDTH;
             app.camera.position.y += (Gdx.input.getDeltaY()) * Gdx.graphics.getHeight() / app.V_HEIGHT;
         }
@@ -70,70 +72,32 @@ public class GameScreen extends Stage implements Screen {
         if(Gdx.input.isTouched()) {
             processTouch();
         }
-
-        if(!world.isTurnProcessd) {
-            world.isTurnProcessd = true;
-            hideWorldInventory();
-        }
         this.act(dt);
     }
 
     private void processTouch() {
+        if(!app.world.isActive()) return;
+
         GameObject touched = app.getTocuhed();
         if(touched != null)
             if(touched.getClass() == Chest.class) {
-                if(world.player.getDist(touched) <= 1.5f && ((Chest)touched).getLevel() == 0) {
-                    showWorldInventory(((Chest)touched).inventory);
+                if(app.world.player.getDist(touched) <= 1.5f && ((Chest)touched).getLevel() == 0) {
+                    swapItemsWindow = new SwapItemsWindow(this, app.skin, app.world.player.inventory, ((Chest)touched).inventory, 140.0f, 60.0f, 1000.0f, 600.0f);
+                    swapItemsWindow.show();
+                    app.world.deactivate();
                 }
             }
     }
 
-    private void hideInventory() {
-        world.player.inventory.getUi().addAction(Actions.moveTo(-80.0f, 60.0f, 0.5f));
-        hideWorldInventory();
-    }
-    private void hideWorldInventory() {
-        if(worldInventory != null)
-            worldInventory.getUi().addAction(Actions.sequence(
-                    Actions.moveTo(-80.0f, 60.0f, 0.5f),
-                    new Action() {
-                        @Override
-                        public boolean act(float v) {
-                            getActors().removeValue(worldInventory.getUi(), true);
-                            worldInventory = null;
-                            return true;
-                        }
-                    }));
-    }
-
-    private void showInventory() {
-        world.player.inventory.getUi().clearActions();
-        world.player.inventory.updateUi();
-        world.player.inventory.getUi().addAction(Actions.moveTo(80.0f, 60.0f, 0.5f));
-    }
-    private void showWorldInventory(Inventory inv) {
-        showInventory();
-        if(worldInventory != null) this.getActors().removeValue(worldInventory.getUi(), true);
-        worldInventory = inv;
-        worldInventory.getUi().clearActions();
-        worldInventory.getUi().setPosition(-80.0f, 60.0f);
-        worldInventory.getUi().addAction(Actions.moveTo(160.0f, 60.0f, 0.5f));
-        worldInventory.getUi().getStyle().background = new TextureRegionDrawable(new TextureRegion(app.assets.get("textures/playerui.png", Texture.class)));
-        this.addActor(worldInventory.getUi());
-        Inventory.connectInventories(worldInventory, world.player.inventory);
-    }
     private void setupUi() {
         menu = new Table();
         TextButton openInventoryButton = new TextButton("INV", app.skin, "default");
         openInventoryButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if(world.player.inventory.getUi().getX() == -80.0f) {
-                    showInventory();
-                }
-                else {
-                    hideInventory();
-                }
+                hideAll();
+                playerPda.show();
+                app.world.deactivate();
             }
         });
 
@@ -156,9 +120,17 @@ public class GameScreen extends Stage implements Screen {
 
         this.addActor(menu);
 
-        world.player.inventory.getUi().setPosition(-80.0f, 60.0f);
-        world.player.inventory.getUi().getStyle().background = new TextureRegionDrawable(new TextureRegion(app.assets.get("textures/playerui.png", Texture.class)));
-        this.addActor(world.player.inventory.getUi());
+        playerPda = new PlayerInfoWindow(this, app.skin, app.world.player, 1000, 600, 140, 60);
+        swapItemsWindow = new SwapItemsWindow(this, app.skin, app.world.player.inventory, app.world.player.inventory, 140.0f, 60.0f, 1000.0f, 600.0f);
+    }
+
+    private void hideAll() {
+        playerPda.hide();
+        swapItemsWindow.hide();
+    }
+
+    private boolean isAllHidden() {
+        return playerPda.isHidden() && swapItemsWindow.isHidden();
     }
 
     @Override
@@ -179,36 +151,16 @@ public class GameScreen extends Stage implements Screen {
     @Override
     public void hide() {
         this.clear();
-        world.dispose();
-        worldInventory = null;
+        app.world.dispose();
     }
 
     @Override
     public void dispose() {
         this.dispose();
     }
-    class tmpCilckListener extends ClickListener {
-        int n;
-        Inventory dest;
-        Inventory loc;
-        public tmpCilckListener(int n, Inventory loc, Inventory dest) {
-            this.n = n;
-            this.loc = loc;
-            this.dest = dest;
-        }
-        @Override
-        public void clicked(InputEvent event, float x, float y) {
-            if(getTapCount() == 1 && dest != null && loc != null) {
-                System.out.println(n);
-                dest.addItem(loc.takeItem(loc.getItem(n)));
-                Inventory tmp = dest;
-                dest = loc;
-                loc = tmp;
-            }
-        }
-    };
-    class WorldClickListener extends ClickListener {
-        World world;
+
+    private class WorldClickListener extends ClickListener {
+        private World world;
         public WorldClickListener(World world) {
             this.world = world;
         }

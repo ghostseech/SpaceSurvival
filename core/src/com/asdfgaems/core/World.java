@@ -16,20 +16,20 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 public class World {
     private TileMap map;
     public Player player;
     public HashMap<String, GameObject> gameObjects;
     private SpaceSurvival app;
-    public boolean isTurnProcessd;
 
     private boolean needProcess;
-    private float turnDelay;
-
+    private boolean processing;
+    private boolean active;
+    private float timer;
 
     public World(SpaceSurvival app) {
         this.app = app;
@@ -38,28 +38,55 @@ public class World {
     public void create() {
         gameObjects = new HashMap<String, GameObject>();
         loadMap();
-        isTurnProcessd = true;
     }
     public void update(float dt) {
-        if(turnDelay > 0.0f) turnDelay -= dt;
-        if(turnDelay <= 0.0f && (player.isNeedProcess() || needProcess)) processTurn();
+        if(!isActive()) return;
+
+        player.update(dt);
+
+        for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
+            entry.getValue().update(dt);
+        }
+
+        if(needProcess) processTurn();
+
+        if(timer > 0.0f) {
+            timer -= dt;
+            return;
+        }
+
+        if(player.needUpdate) {
+            timer = player.processTurn();
+            return;
+        }
+
+        for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
+            if(entry.getValue().needUpdate) {
+                timer = entry.getValue().processTurn();
+                return;
+            }
+        }
     }
 
     private void processTurn() {
-        player.processTurn();
+        processing = true;
+        player.needUpdate = true;
         for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
-            entry.getValue().processTurn();
+            entry.getValue().needUpdate = true;
         }
-        isTurnProcessd = false;
         needProcess = false;
-        if(player.isNeedProcess())turnDelay = 0.3f;
     }
+
     public void click() {
+        if(!isActive()) return;
         GameObject touched = app.getTocuhed();
         if(touched != null) {
             player.action(touched, "", player.getDist(touched));
         }
-        if(!isCollidable(app.getTouchedX(), app.getToucedY())) player.move(getPath(player.x, player.y, app.getTouchedX(), app.getToucedY()));
+
+        List<Vector2> path = getPath(player.x, player.y, app.getTouchedX(), app.getToucedY());
+        if(isCollidable(app.getTouchedX(), app.getToucedY()) && path.size() >=1) path.remove(path.size()-1);
+        player.move(path);
     }
 
 
@@ -129,18 +156,18 @@ public class World {
 
             String type = object.getProperties().get("type", String.class);
             if(type.equals("player")) {
-                player = new Player(x, y);
+                player = new Player(this, x, y);
                 player.inventory = new Inventory(20);
                 String items = object.getProperties().get("items", String.class);
                 parseItems(items, player.inventory);
             }
             else if(type.equals("door")) {
                 int doorLevel = Integer.parseInt(object.getProperties().get("level", String.class));
-                gameObjects.put(object.getName(), new Door(x, y, doorLevel));
+                gameObjects.put(object.getName(), new Door(this, x, y, doorLevel));
             }
             else if(type.equals("chest")) {
                 int chestLevel = Integer.parseInt(object.getProperties().get("level", String.class));
-                Chest chest = new Chest(x, y, chestLevel);
+                Chest chest = new Chest(this, x, y, chestLevel);
 
                 String items = object.getProperties().get("items", String.class);
                 parseItems(items, chest.inventory);
@@ -163,11 +190,20 @@ public class World {
         PathFinder pf = new PathFinder(this);
         return pf.findPath(startx, starty, endx, endy);
     }
-    public void setTurnDelay(float delay) {
-        turnDelay = delay;
-    }
+
     public void requestTurnProcess() {
         needProcess = true;
+    }
+    public boolean isActive() {
+        return active;
+    }
+
+    public void activate() {
+        active = true;
+    }
+
+    public void deactivate() {
+        active = false;
     }
     public int getMapWidth() {
         return map.width;
@@ -175,9 +211,9 @@ public class World {
     public int getMapHeight() {
         return map.height;
     }
+
     public void dispose() {
         gameObjects.clear();
         player.dispose();
     }
-
 }

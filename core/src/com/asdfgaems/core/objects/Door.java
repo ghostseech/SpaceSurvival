@@ -2,6 +2,7 @@ package com.asdfgaems.core.objects;
 
 import com.asdfgaems.core.GameObject;
 import com.asdfgaems.core.TileMap;
+import com.asdfgaems.core.World;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -15,7 +16,8 @@ public class Door extends GameObject {
     private int level;
     private boolean locked;
 
-    public Door(int x, int y, int level) {
+    public Door(World world, int x, int y, int level) {
+        super(world);
         this.level = level;
         this.x = x;
         this. y = y;
@@ -30,8 +32,9 @@ public class Door extends GameObject {
     }
 
     @Override
-    public void processTurn() {
-
+    public float processTurn() {
+        needUpdate = false;
+        return 0.0f;
     }
 
     @Override
