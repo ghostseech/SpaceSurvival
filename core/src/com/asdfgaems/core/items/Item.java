@@ -1,6 +1,5 @@
-package com.asdfgaems.core.objects;
+package com.asdfgaems.core.items;
 
-import com.asdfgaems.core.GameObject;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 

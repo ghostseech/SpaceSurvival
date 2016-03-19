@@ -1,19 +1,18 @@
 package com.asdfgaems.core.screens;
 
-import com.asdfgaems.core.Inventory;
-import com.asdfgaems.core.InventoryDrawable;
-import com.asdfgaems.core.ItemDrawable;
-import com.asdfgaems.core.objects.Item;
+import com.asdfgaems.core.*;
+import com.asdfgaems.core.items.Armor;
+import com.asdfgaems.core.items.Item;
 import com.asdfgaems.core.objects.Player;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import sun.font.TextLabel;
 
 public class PlayerInfoWindow {
     public static Texture backgroundTexture;
@@ -91,6 +90,14 @@ public class PlayerInfoWindow {
                 }
 
                 inventoryDrawable.show();
+                for(int i = 0; i < inventoryDrawable.getButtons().size(); i++) {
+                    ((TextButton)inventoryDrawable.getButtons().get(i)).addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            updateItemDrawable();
+                        }
+                    });
+                }
                 itemDrawable.show();
             }
         });
@@ -113,6 +120,8 @@ public class PlayerInfoWindow {
         buttonGroup.setUncheckLast(true);
 
         itemDrawable = new ItemDrawable(stage, skin, (Item)buttonGroup.getChecked().getUserObject(), x + menuButtonWidth * 2 + menuSpace *3, y + height - menuButtonHeight - menuSpace * 2, menuButtonWidth * 2, menuButtonHeight, menuButtonHeight, menuButtonHeight);
+        updateItemDrawable();
+        itemDrawable.hide();
     }
 
     public void show() {
@@ -134,14 +143,12 @@ public class PlayerInfoWindow {
 
     public void update(float dt) {
         if(state == STATE_INVENTORY) {
+            inventoryDrawable.setButtonsColor(new Color(1.0f, 1.0f, 1.0f, 1.0f));
             if(buttonGroup.getChecked() != null) {
-                if(buttonGroup.getChecked().getUserObject() != itemDrawable.getItem()) {
-                    itemDrawable.hide();
-                    itemDrawable = new ItemDrawable(stage, skin, (Item)buttonGroup.getChecked().getUserObject(), x + menuButtonWidth * 2 + menuSpace *3, y + height - menuButtonHeight - menuSpace * 2, menuButtonWidth * 2, menuButtonHeight, menuButtonHeight, menuButtonHeight);
-                    itemDrawable.show();
-                }
-                inventoryDrawable.setButtonsColor(new Color(1.0f, 1.0f, 1.0f, 1.0f));
                 buttonGroup.getChecked().setColor(0.7f, 1.0f, 0.7f, 1.0f);
+                for(int i = 0; i < buttonGroup.getButtons().size; i++) {
+                    if(((TextButton)buttonGroup.getButtons().get(i)).getUserObject() == player.getArmor()) ((TextButton)buttonGroup.getButtons().get(i)).setColor(1.0f, 0.7f, 0.7f, 1.0f);
+                }
             }
             else {
                 itemDrawable.hide();
@@ -149,8 +156,32 @@ public class PlayerInfoWindow {
         }
     }
 
+    private void updateItemDrawable() {
+        itemDrawable.hide();
+        itemDrawable = new ItemDrawable(stage, skin, (Item)buttonGroup.getChecked().getUserObject(), x + menuButtonWidth * 2 + menuSpace *3, y + height - menuButtonHeight - menuSpace * 2, menuButtonWidth * 2, menuButtonHeight, menuButtonHeight, menuButtonHeight);
+
+        if(itemDrawable.getItem().getClass() == Armor.class) {
+            if(player.getArmor() == itemDrawable.getItem()) addCommandButton("Unequip", new UnequipItemCommand(player, itemDrawable.getItem()));
+            else addCommandButton("Equip", new EquipItemCommand(player, itemDrawable.getItem()));
+        }
+
+        itemDrawable.show();
+    }
+
+    private void addCommandButton(String text, Command command) {
+        itemDrawable.addCommandButton(text, command);
+        itemDrawable.getButtons().getLast().addListener(new UpdateItemListener());
+    }
+
     public boolean isHidden() {
         return hidden;
+    }
+
+    private class UpdateItemListener extends ClickListener {
+        @Override
+        public void clicked(InputEvent event, float x, float y) {
+            updateItemDrawable();
+        }
     }
 
 }

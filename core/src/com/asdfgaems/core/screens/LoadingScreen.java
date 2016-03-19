@@ -1,7 +1,9 @@
 package com.asdfgaems.core.screens;
 
 import com.asdfgaems.core.SpaceSurvival;
-import com.asdfgaems.core.objects.AcessCard;
+import com.asdfgaems.core.items.AcessCard;
+import com.asdfgaems.core.items.Armor;
+import com.asdfgaems.core.items.Consumable;
 import com.asdfgaems.core.objects.Chest;
 import com.asdfgaems.core.objects.Door;
 import com.asdfgaems.core.objects.Player;
@@ -65,6 +67,10 @@ public class LoadingScreen implements Screen {
         app.assets.load("textures/wall_1.png", Texture.class);
         app.assets.load("textures/playerui.png", Texture.class);
 
+        app.assets.load("textures/food_type_1.png", Texture.class);
+        app.assets.load("textures/healthbox_base.png", Texture.class);
+        app.assets.load("textures/armor_base.png", Texture.class);
+
     }
 
     private void setupGameResources() {
@@ -84,6 +90,10 @@ public class LoadingScreen implements Screen {
 
         PlayerInfoWindow.backgroundTexture = app.assets.get("textures/playerui.png", Texture.class);
         SwapItemsWindow.backgroundTexture = app.assets.get("textures/playerui.png", Texture.class);
+
+        Armor.texture_base = app.assets.get("textures/armor_base.png", Texture.class);
+        Consumable.texture_food_1= app.assets.get("textures/food_type_1.png", Texture.class);
+        Consumable.texture_health_1= app.assets.get("textures/healthbox_base.png", Texture.class);
     }
 
     @Override

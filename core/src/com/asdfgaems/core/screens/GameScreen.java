@@ -82,7 +82,7 @@ public class GameScreen extends Stage implements Screen {
         if(touched != null)
             if(touched.getClass() == Chest.class) {
                 if(app.world.player.getDist(touched) <= 1.5f && ((Chest)touched).getLevel() == 0) {
-                    swapItemsWindow = new SwapItemsWindow(this, app.skin, app.world.player.inventory, ((Chest)touched).inventory, 140.0f, 60.0f, 1000.0f, 600.0f);
+                    swapItemsWindow = new SwapItemsWindow(this, app.skin, app.world.player, ((Chest)touched).inventory, 140.0f, 60.0f, 1000.0f, 600.0f);
                     swapItemsWindow.show();
                     app.world.deactivate();
                 }
@@ -121,7 +121,7 @@ public class GameScreen extends Stage implements Screen {
         this.addActor(menu);
 
         playerPda = new PlayerInfoWindow(this, app.skin, app.world.player, 1000, 600, 140, 60);
-        swapItemsWindow = new SwapItemsWindow(this, app.skin, app.world.player.inventory, app.world.player.inventory, 140.0f, 60.0f, 1000.0f, 600.0f);
+        swapItemsWindow = new SwapItemsWindow(this, app.skin, app.world.player, app.world.player.inventory, 140.0f, 60.0f, 1000.0f, 600.0f);
     }
 
     private void hideAll() {

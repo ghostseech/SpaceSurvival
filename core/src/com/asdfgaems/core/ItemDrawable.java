@@ -1,17 +1,21 @@
 package com.asdfgaems.core;
 
-import com.asdfgaems.core.objects.Item;
+import com.asdfgaems.core.items.Item;
+import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 
+import java.util.LinkedList;
+
 public class ItemDrawable {
     private Stage stage;
     private Skin skin;
     private Item item;
 
+    private LinkedList<TextButton> buttons;
     private Label itemName;
     private Label itemDescription;
     private Image itemIcon;
@@ -37,6 +41,7 @@ public class ItemDrawable {
         this.height = height;
         this.buttonHeight = buttonHeight;
         this.iconSize = iconSize;
+        this.buttons = new LinkedList<TextButton>();
 
         create();
     }
@@ -68,8 +73,12 @@ public class ItemDrawable {
         });
         table.add(button).size(width, buttonHeight/2);
         table.row();
+        buttons.add(button);
     }
 
+    public LinkedList<TextButton> getButtons() {
+        return buttons;
+    }
     public void create() {
         itemIcon = new Image(item.getTexture());
         itemIcon.setSize(iconSize, iconSize);

@@ -1,6 +1,5 @@
 package com.asdfgaems.core;
 
-import com.asdfgaems.core.objects.Item;
 import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 

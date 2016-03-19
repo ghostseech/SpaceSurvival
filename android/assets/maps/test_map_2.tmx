@@ -60,10 +60,14 @@
  </layer>
  <objectgroup name="objects">
   <object id="1" name="enemy_1" type="monster" gid="11" x="384" y="96" width="32" height="32"/>
-  <object id="2" name="enemy_2" type="slime" gid="12" x="64" y="96" width="32" height="32"/>
+  <object id="2" name="enemy_2" type="slime" gid="12" x="64" y="96" width="32" height="32">
+   <properties>
+    <property name="level" value="1"/>
+   </properties>
+  </object>
   <object id="3" name="player" type="player" gid="15" x="384" y="416" width="32" height="32">
    <properties>
-    <property name="items" value="card_1 card_2 card_3"/>
+    <property name="items" value="card_1 card_2 card_3 armor_base health_1 food_ration_1 "/>
    </properties>
   </object>
   <object id="4" name="chest_1" type="chest" gid="4" x="56" y="465" width="32" height="32">

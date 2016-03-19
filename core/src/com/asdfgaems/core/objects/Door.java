@@ -3,8 +3,8 @@ package com.asdfgaems.core.objects;
 import com.asdfgaems.core.GameObject;
 import com.asdfgaems.core.TileMap;
 import com.asdfgaems.core.World;
+import com.asdfgaems.core.items.AcessCard;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Door extends GameObject {

@@ -4,20 +4,15 @@ import com.asdfgaems.core.Inventory;
 import com.asdfgaems.core.InventoryDrawable;
 import com.asdfgaems.core.ItemDrawable;
 import com.asdfgaems.core.MoveItemCommand;
-import com.asdfgaems.core.objects.Item;
+import com.asdfgaems.core.items.Item;
+import com.asdfgaems.core.objects.Player;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
-
-import java.util.LinkedList;
 
 public class SwapItemsWindow {
     public static Texture backgroundTexture;
@@ -29,7 +24,7 @@ public class SwapItemsWindow {
     private InventoryDrawable inventoryDrawable;
     private ItemDrawable itemDrawable;
 
-    private Inventory playerInventory;
+    private Player player;
     private Inventory inventory;
     private Button exitButton;
 
@@ -51,10 +46,10 @@ public class SwapItemsWindow {
     private final float buttonWidth;
     private final float buttonHeight;
 
-    public SwapItemsWindow(Stage stage, Skin skin, Inventory playerInventory, Inventory inventory, float x, float y, float width, float height) {
+    public SwapItemsWindow(Stage stage, Skin skin, Player player, Inventory inventory, float x, float y, float width, float height) {
         this.stage = stage;
         this.skin = skin;
-        this.playerInventory = playerInventory;
+        this.player = player;
         this.inventory = inventory;
 
         this.x = x;
@@ -77,7 +72,7 @@ public class SwapItemsWindow {
         inventoryLabel.setSize(buttonWidth, buttonHeight);
         inventoryLabel.setPosition(x + menuSpace * 2 + buttonWidth, y + height - menuSpace - buttonHeight);
 
-        this.playerInventoryDrawable = new InventoryDrawable(playerInventory, stage, skin, x + menuSpace, y + menuSpace, buttonWidth, height - menuSpace * 2 - buttonHeight);
+        this.playerInventoryDrawable = new InventoryDrawable(player.inventory, stage, skin, x + menuSpace, y + menuSpace, buttonWidth, height - menuSpace * 2 - buttonHeight);
         this.inventoryDrawable = new InventoryDrawable(inventory, stage, skin, x + buttonWidth + menuSpace * 2, y + menuSpace, buttonWidth, height - menuSpace * 2 - buttonHeight);
 
         buttonGroup = new ButtonGroup();
@@ -86,16 +81,17 @@ public class SwapItemsWindow {
 
         for(TextButton b : playerInventoryDrawable.getButtons()) {
             buttonGroup.add(b);
+            b.addListener(new UpdateItemListener());
         }
 
         for(TextButton b : inventoryDrawable.getButtons()) {
             buttonGroup.add(b);
+            b.addListener(new UpdateItemListener());
         }
 
         itemDrawable = new ItemDrawable(stage, skin, (Item)buttonGroup.getChecked().getUserObject(), x + buttonWidth * 2 + menuSpace *3, y + height - buttonHeight - menuSpace * 2, buttonWidth * 2 - menuSpace * 4, buttonHeight, buttonHeight, buttonHeight);
-        if(playerInventory.checkItem(itemDrawable.getItem())) itemDrawable.addCommandButton("MOVE", new MoveItemCommand(itemDrawable, playerInventoryDrawable, inventoryDrawable, buttonGroup));
-        else itemDrawable.addCommandButton("MOVE", new MoveItemCommand(itemDrawable, inventoryDrawable, playerInventoryDrawable, buttonGroup));
-
+        updateItemDrawable();
+        itemDrawable.hide();
         background = new Image(backgroundTexture);
         background.setPosition(x, y);
         background.setSize(width, height);
@@ -117,15 +113,6 @@ public class SwapItemsWindow {
         inventoryDrawable.setButtonsColor(new Color(1.0f, 1.0f, 1.0f, 1.0f));
 
         if(buttonGroup.getChecked() != null) {
-            if(buttonGroup.getChecked().getUserObject() != itemDrawable.getItem()) {
-                itemDrawable.hide();
-                itemDrawable = new ItemDrawable(stage, skin, (Item)buttonGroup.getChecked().getUserObject(), x + buttonWidth * 2 + menuSpace *3, y + height - buttonHeight - menuSpace * 2, buttonWidth * 2 - menuSpace * 4, buttonHeight, buttonHeight, buttonHeight);
-                if(playerInventory.checkItem(itemDrawable.getItem())) itemDrawable.addCommandButton("MOVE", new MoveItemCommand(itemDrawable, playerInventoryDrawable, inventoryDrawable, buttonGroup));
-                else itemDrawable.addCommandButton("MOVE", new MoveItemCommand(itemDrawable, inventoryDrawable, playerInventoryDrawable, buttonGroup));
-
-                itemDrawable.show();
-            }
-
             inventoryDrawable.setButtonsColor(new Color(1.0f, 1.0f, 1.0f, 1.0f));
             buttonGroup.getChecked().setColor(0.7f, 1.0f, 0.7f, 1.0f);
         }
@@ -134,6 +121,25 @@ public class SwapItemsWindow {
         }
     }
 
+    private void updateItemDrawable() {
+        itemDrawable.hide();
+        itemDrawable = new ItemDrawable(stage, skin, (Item)buttonGroup.getChecked().getUserObject(), x + buttonWidth * 2 + menuSpace *3, y + height - buttonHeight - menuSpace * 2, buttonWidth * 2 - menuSpace * 4, buttonHeight, buttonHeight, buttonHeight);
+        if(player.inventory.checkItem(itemDrawable.getItem())) itemDrawable.addCommandButton("MOVE", new MoveItemCommand(itemDrawable, playerInventoryDrawable, inventoryDrawable, buttonGroup));
+        else itemDrawable.addCommandButton("MOVE", new MoveItemCommand(itemDrawable, inventoryDrawable, playerInventoryDrawable, buttonGroup));
+        itemDrawable.getButtons().getLast().addListener(new UpdateItemListener());
+        itemDrawable.getButtons().getLast().addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                updateButtonGroup();
+            }
+        });
+        itemDrawable.show();
+    }
+    private void updateButtonGroup() {
+        for(int i = 0; i < buttonGroup.getButtons().size; i++) {
+            ((TextButton)buttonGroup.getButtons().get(i)).addListener(new UpdateItemListener());
+        }
+    }
     public void show() {
         hidden = false;
         stage.addActor(background);
@@ -157,6 +163,13 @@ public class SwapItemsWindow {
     }
     public boolean isHidden() {
         return hidden;
+    }
+
+    public class UpdateItemListener extends ClickListener {
+        @Override
+        public void clicked(InputEvent event, float x, float y) {
+            updateItemDrawable();
+        }
     }
 
 }

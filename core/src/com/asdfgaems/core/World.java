@@ -1,11 +1,11 @@
 package com.asdfgaems.core;
 
-import com.asdfgaems.core.objects.AcessCard;
+import com.asdfgaems.core.items.AcessCard;
+import com.asdfgaems.core.items.Armor;
+import com.asdfgaems.core.items.Consumable;
 import com.asdfgaems.core.objects.Chest;
 import com.asdfgaems.core.objects.Door;
 import com.asdfgaems.core.objects.Player;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapObject;
@@ -102,6 +102,16 @@ public class World {
         }
     }
 
+    public boolean isVisibleFrom(int startx, int starty, int endx, int endy) {
+        for(int x = 0; x < Math.abs(startx - endx); x++) {
+            for(int y = 0; y < Math.abs(starty - endy); y++) {
+
+            }
+        }
+        return true;
+    }
+
+
     public void draw(SpriteBatch batch) {
         map.draw(batch);
         player.draw(batch);
@@ -183,6 +193,9 @@ public class World {
             if(s.equals("card_1")) inv.addItem(new AcessCard(1));
             if(s.equals("card_2")) inv.addItem(new AcessCard(2));
             if(s.equals("card_3")) inv.addItem(new AcessCard(3));
+            if(s.equals("armor_base")) inv.addItem(new Armor(Armor.ARMOR_BASE));
+            if(s.equals("food_ration_1")) inv.addItem(new Consumable(Consumable.FOOD_RATION_1));
+            if(s.equals("health_1")) inv.addItem(new Consumable(Consumable.HEALTH_1));
         }
     }
 

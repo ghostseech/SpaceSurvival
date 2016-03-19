@@ -17,8 +17,9 @@ public class PathFinder {
         this.world = world;
     }
     public List<Vector2> findPath(int startx, int starty, int endx, int endy) {
-        nodes = prepareMap(world);
         if(endx >= world.getMapWidth() || endx < 0 || endy >= world.getMapHeight() || endy < 0) return new LinkedList<Vector2>();
+        nodes = prepareMap(world);
+        nodes[endx][endy] = new Node(endx, endy);
 
         if(nodes[endx][endy] == null) return new LinkedList<Vector2>();
 
@@ -28,7 +29,6 @@ public class PathFinder {
         openList.add(nodes[startx][starty]);
 
         boolean done = false;
-        System.out.println("GO");
         while (!done) {
             Node current = findLowestF(openList);
             closeList.add(current);
