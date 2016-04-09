@@ -2,7 +2,9 @@ package com.asdfgaems.core.screens;
 
 import com.asdfgaems.core.*;
 import com.asdfgaems.core.items.Armor;
+import com.asdfgaems.core.items.Consumable;
 import com.asdfgaems.core.items.Item;
+import com.asdfgaems.core.items.Weapon;
 import com.asdfgaems.core.objects.Player;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -148,6 +150,7 @@ public class PlayerInfoWindow {
                 buttonGroup.getChecked().setColor(0.7f, 1.0f, 0.7f, 1.0f);
                 for(int i = 0; i < buttonGroup.getButtons().size; i++) {
                     if(((TextButton)buttonGroup.getButtons().get(i)).getUserObject() == player.getArmor()) ((TextButton)buttonGroup.getButtons().get(i)).setColor(1.0f, 0.7f, 0.7f, 1.0f);
+                    if(((TextButton)buttonGroup.getButtons().get(i)).getUserObject() == player.getWeapon()) ((TextButton)buttonGroup.getButtons().get(i)).setColor(1.0f, 0.7f, 0.7f, 1.0f);
                 }
             }
             else {
@@ -161,15 +164,75 @@ public class PlayerInfoWindow {
         itemDrawable = new ItemDrawable(stage, skin, (Item)buttonGroup.getChecked().getUserObject(), x + menuButtonWidth * 2 + menuSpace *3, y + height - menuButtonHeight - menuSpace * 2, menuButtonWidth * 2, menuButtonHeight, menuButtonHeight, menuButtonHeight);
 
         if(itemDrawable.getItem().getClass() == Armor.class) {
-            if(player.getArmor() == itemDrawable.getItem()) addCommandButton("Unequip", new UnequipItemCommand(player, itemDrawable.getItem()));
-            else addCommandButton("Equip", new EquipItemCommand(player, itemDrawable.getItem()));
+            if(player.getArmor() == itemDrawable.getItem()) {
+                addCommandButton("Unequip");
+                itemDrawable.getButtons().getLast().addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        player.equipArmor(null);
+                    }
+                });
+            }
+            else {
+                addCommandButton("Equip");
+                itemDrawable.getButtons().getLast().addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        player.equipArmor((Armor)itemDrawable.getItem());
+                    }
+                });
+            }
         }
-
+        else if(itemDrawable.getItem().getClass() == Weapon.class) {
+            if(player.getWeapon() == itemDrawable.getItem()) {
+                addCommandButton("Unequip");
+                itemDrawable.getButtons().getLast().addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        player.equipWeapon(null);
+                    }
+                });
+            }
+            else {
+                addCommandButton("Equip");
+                itemDrawable.getButtons().getLast().addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        player.equipWeapon((Weapon) itemDrawable.getItem());
+                    }
+                });
+            }
+        }
+        else if(itemDrawable.getItem().getClass() == Consumable.class) {
+            addCommandButton("Use");
+            itemDrawable.getButtons().getLast().addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    player.consume((Consumable) itemDrawable.getItem());
+                    inventoryDrawable.getInventory().removeItem(itemDrawable.getItem());
+                    inventoryDrawable.create();
+                    buttonGroup.clear();
+                    for(TextButton b : inventoryDrawable.getButtons()) {
+                        buttonGroup.add(b);
+                    }
+                    for(int i = 0; i < inventoryDrawable.getButtons().size(); i++) {
+                        ((TextButton)inventoryDrawable.getButtons().get(i)).addListener(new ClickListener() {
+                            @Override
+                            public void clicked(InputEvent event, float x, float y) {
+                                updateItemDrawable();
+                            }
+                        });
+                    }
+                    inventoryDrawable.show();
+                    updateItemDrawable();
+                }
+            });
+        }
         itemDrawable.show();
     }
 
-    private void addCommandButton(String text, Command command) {
-        itemDrawable.addCommandButton(text, command);
+    private void addCommandButton(String text) {
+        itemDrawable.addCommandButton(text);
         itemDrawable.getButtons().getLast().addListener(new UpdateItemListener());
     }
 
@@ -183,5 +246,4 @@ public class PlayerInfoWindow {
             updateItemDrawable();
         }
     }
-
 }

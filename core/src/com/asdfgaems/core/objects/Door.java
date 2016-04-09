@@ -16,8 +16,8 @@ public class Door extends GameObject {
     private int level;
     private boolean locked;
 
-    public Door(World world, int x, int y, int level) {
-        super(world);
+    public Door(World world, String name, int x, int y, int level) {
+        super(world, name);
         this.level = level;
         this.x = x;
         this. y = y;
@@ -63,9 +63,18 @@ public class Door extends GameObject {
     public void action(GameObject actor) {
         if(actor.getClass() == Player.class) {
             Player player = (Player)actor;
-            if(level == 1 && player.inventory.takeItem(new AcessCard(1)) != null) locked = false;
-            else if(level == 2 && player.inventory.takeItem(new AcessCard(2)) != null) locked = false;
-            else if(level == 3 && player.inventory.takeItem(new AcessCard(3)) != null) locked = false;
+            if(level == 1 && player.inventory.takeItem(new AcessCard(1)) != null) {
+                locked = false;
+                level = 0;
+            }
+            else if(level == 2 && player.inventory.takeItem(new AcessCard(2)) != null) {
+                locked = false;
+                level = 0;
+            }
+            else if(level == 3 && player.inventory.takeItem(new AcessCard(3)) != null) {
+                locked = false;
+                level = 0;
+            }
             open();
         }
     }

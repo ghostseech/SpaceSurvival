@@ -12,11 +12,17 @@ public class Armor extends Item {
     private float physResist;
     private float energyResist;
 
+    private float radResist;
+
+    private float toxicResist;
+
     public Armor(int type) {
         this.type = type;
         if(type == ARMOR_BASE) {
             physResist = 0.05f;
             energyResist = 0.05f;
+            radResist = 0.0f;
+            toxicResist = 0.0f;
         }
     }
     public void draw(SpriteBatch batch, float x, float y, float size) {
@@ -42,6 +48,15 @@ public class Armor extends Item {
         if(type == ARMOR_BASE) return "Standard space station workers cloth  with low resistance";
         return "Error";
     }
+
+    public float getRadResist() {
+        return radResist;
+    }
+
+    public float getToxicResist() {
+        return toxicResist;
+    }
+
     public float getPhysResist() {
         return physResist;
     }

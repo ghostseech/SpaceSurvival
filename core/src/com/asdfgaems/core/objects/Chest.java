@@ -17,8 +17,8 @@ public class Chest extends GameObject {
 
 
     private int level;
-    public Chest(World world, int x, int y, int level) {
-        super(world);
+    public Chest(World world, String name, int x, int y, int level) {
+        super(world, name);
         this.x = x;
         this.y = y;
         this.level = level;

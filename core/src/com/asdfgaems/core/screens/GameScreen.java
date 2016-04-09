@@ -4,6 +4,7 @@ import com.asdfgaems.core.*;
 import com.asdfgaems.core.objects.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -16,14 +17,28 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
+import sun.font.TextLabel;
 
 public class GameScreen extends Stage implements Screen {
+    public static Texture bleed_indicator_texture;
+    public static Texture toxic_indicator_texture;
+    public static Texture radiation_indicator_texture;
+    public static Texture hpregen_indicator_texture;
+
     private SpaceSurvival app;
 
     private Table menu;
     private float clickTimer;
     private PlayerInfoWindow playerPda;
     private SwapItemsWindow swapItemsWindow;
+    private Label playerHp;
+    private Label playerSatiety;
+
+    private Table indicators;
+    private Image bleed_indicator;
+    private Image radiation_indicator;
+    private Image hpregen_indicator;
+    private Image toxic_indicator;
 
     public GameScreen(SpaceSurvival app) {
         super(new StretchViewport(app.V_WIDTH, app.V_HEIGHT));
@@ -61,7 +76,12 @@ public class GameScreen extends Stage implements Screen {
         playerPda.update(dt);
         swapItemsWindow.update(dt);
 
+        playerHp.setText("HEALTH:" + app.world.player.getHp());
+        playerSatiety.setText("SATIETY:" + app.world.player.getSatiety());
+        checkIndicators();
+
         if(isAllHidden())app.world.activate();
+        else app.world.deactivate();
 
         if(clickTimer > 0.0f) clickTimer -=dt;
         if(Gdx.input.isTouched() && app.world.isActive()) {
@@ -69,24 +89,55 @@ public class GameScreen extends Stage implements Screen {
             app.camera.position.y += (Gdx.input.getDeltaY()) * Gdx.graphics.getHeight() / app.V_HEIGHT;
         }
 
-        if(Gdx.input.isTouched()) {
-            processTouch();
-        }
         this.act(dt);
     }
 
-    private void processTouch() {
-        if(!app.world.isActive()) return;
+    private void checkIndicators() {
+        if((indicators.getChildren().indexOf(bleed_indicator, true) == -1)  == app.world.player.isBleed()){
+            updateIndicators();
+            return;
+        }
+        if((indicators.getChildren().indexOf(radiation_indicator, true) == -1) == app.world.player.isRadiated()) {
+            updateIndicators();
+            return;
+        }
+        if((indicators.getChildren().indexOf(toxic_indicator, true) == -1) == app.world.player.isToxic()) {
+            updateIndicators();
+            return;
+        }
+        if((indicators.getChildren().indexOf(hpregen_indicator, true) == -1) == app.world.player.isHpRegen()) {
+            updateIndicators();
+            return;
+        }
 
-        GameObject touched = app.getTocuhed();
-        if(touched != null)
-            if(touched.getClass() == Chest.class) {
-                if(app.world.player.getDist(touched) <= 1.5f && ((Chest)touched).getLevel() == 0) {
-                    swapItemsWindow = new SwapItemsWindow(this, app.skin, app.world.player, ((Chest)touched).inventory, 140.0f, 60.0f, 1000.0f, 600.0f);
-                    swapItemsWindow.show();
-                    app.world.deactivate();
-                }
-            }
+    }
+    private void updateIndicators() {
+        indicators.clearChildren();
+
+        if(app.world.player.isBleed()) {
+            indicators.add(bleed_indicator).size(80, 80);
+            indicators.row();
+        }
+
+        if(app.world.player.isHpRegen()) {
+            indicators.add(hpregen_indicator).size(80, 80);
+            indicators.row();
+        }
+
+        if(app.world.player.isRadiated()) {
+            indicators.add(radiation_indicator).size(80, 80);
+            indicators.row();
+        }
+
+        if(app.world.player.isToxic()) {
+            indicators.add(toxic_indicator).size(80, 80);
+            indicators.row();
+        }
+    }
+
+    public void showSwapItemsWindow(Player player, Inventory inventory) {
+        swapItemsWindow = new SwapItemsWindow(this, app.skin, player, inventory, 140.0f, 60.0f, 1000.0f, 600.0f);
+        swapItemsWindow.show();
     }
 
     private void setupUi() {
@@ -120,8 +171,40 @@ public class GameScreen extends Stage implements Screen {
 
         this.addActor(menu);
 
+        playerSatiety = new Label("", app.skin);
+        playerSatiety.getStyle().fontColor = new Color(1.0f, 0.3f, 0.3f, 1.0f);
+        playerSatiety.setPosition(40.0f, 660.0f);
+        playerSatiety.setSize(100.0f, 40.0f);
+        this.addActor(playerSatiety);
+
+        playerHp = new Label("", app.skin);
+        playerHp.setPosition(40.0f, 620.0f);
+        playerHp.setSize(100.0f, 40.0f);
+        playerHp.getStyle().fontColor = Color.BLUE;
+        this.addActor(playerHp);
+
         playerPda = new PlayerInfoWindow(this, app.skin, app.world.player, 1000, 600, 140, 60);
         swapItemsWindow = new SwapItemsWindow(this, app.skin, app.world.player, app.world.player.inventory, 140.0f, 60.0f, 1000.0f, 600.0f);
+
+        bleed_indicator = new Image(bleed_indicator_texture);
+        bleed_indicator.setSize(64.0f, 64.0f);
+
+        toxic_indicator = new Image(toxic_indicator_texture);
+        toxic_indicator.setSize(64.0f, 64.0f);
+
+        radiation_indicator = new Image(radiation_indicator_texture);
+        radiation_indicator.setSize(64.0f, 64.0f);
+
+        hpregen_indicator = new Image(hpregen_indicator_texture);
+        hpregen_indicator.setSize(64.0f, 64.0f);
+
+        indicators = new Table(app.skin);
+        indicators.setPosition(1200, 360);
+        indicators.setSize(80, 360);
+        indicators.align(Align.top);
+        this.addActor(indicators);
+
+        updateIndicators();
     }
 
     private void hideAll() {

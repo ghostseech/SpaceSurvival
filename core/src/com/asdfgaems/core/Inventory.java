@@ -64,6 +64,9 @@ public class Inventory {
             return result;
         }
     }
+    public void removeItem(Item item) {
+        items.remove(item);
+    }
 
     public boolean checkItem(Item item) {
         return (items.indexOf(item) != -1);

@@ -1,6 +1,5 @@
 package com.asdfgaems.core.objects;
 
-import com.asdfgaems.core.GameObject;
 import com.asdfgaems.core.TileMap;
 import com.asdfgaems.core.World;
 import com.badlogic.gdx.graphics.Texture;
@@ -8,10 +7,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
-import java.util.LinkedList;
 import java.util.List;
 
-public class Slime extends Enemy {
+public class Soldier extends Enemy {
+//   public static final int
+
     public static Texture texture_type_1;
     private static final int RANDOM_WALKING = 1;
     private static final int PLAYER_CHASING = 2;
@@ -25,7 +25,9 @@ public class Slime extends Enemy {
 
     private int chaseTime;
 
-    public Slime(World world, String name, int x, int y) {
+    private int type;
+
+    public Soldier(World world, String name, int type, int x, int y) {
         super(world, name, x ,y);
         texture = texture_type_1;
         state = RANDOM_WALKING;

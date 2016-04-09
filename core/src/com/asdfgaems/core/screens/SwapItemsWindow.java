@@ -3,7 +3,6 @@ package com.asdfgaems.core.screens;
 import com.asdfgaems.core.Inventory;
 import com.asdfgaems.core.InventoryDrawable;
 import com.asdfgaems.core.ItemDrawable;
-import com.asdfgaems.core.MoveItemCommand;
 import com.asdfgaems.core.items.Item;
 import com.asdfgaems.core.objects.Player;
 import com.badlogic.gdx.graphics.Color;
@@ -89,9 +88,12 @@ public class SwapItemsWindow {
             b.addListener(new UpdateItemListener());
         }
 
-        itemDrawable = new ItemDrawable(stage, skin, (Item)buttonGroup.getChecked().getUserObject(), x + buttonWidth * 2 + menuSpace *3, y + height - buttonHeight - menuSpace * 2, buttonWidth * 2 - menuSpace * 4, buttonHeight, buttonHeight, buttonHeight);
-        updateItemDrawable();
-        itemDrawable.hide();
+        if(buttonGroup.getButtons().size > 0) {
+            itemDrawable = new ItemDrawable(stage, skin, (Item)buttonGroup.getChecked().getUserObject(), x + buttonWidth * 2 + menuSpace *3, y + height - buttonHeight - menuSpace * 2, buttonWidth * 2 - menuSpace * 4, buttonHeight, buttonHeight, buttonHeight);
+            updateItemDrawable();
+            itemDrawable.hide();
+        }
+
         background = new Image(backgroundTexture);
         background.setPosition(x, y);
         background.setSize(width, height);
@@ -117,22 +119,84 @@ public class SwapItemsWindow {
             buttonGroup.getChecked().setColor(0.7f, 1.0f, 0.7f, 1.0f);
         }
         else {
-            itemDrawable.hide();
+            if(itemDrawable != null) itemDrawable.hide();
         }
     }
 
     private void updateItemDrawable() {
+        if(buttonGroup.getButtons().size < 1) return;
         itemDrawable.hide();
         itemDrawable = new ItemDrawable(stage, skin, (Item)buttonGroup.getChecked().getUserObject(), x + buttonWidth * 2 + menuSpace *3, y + height - buttonHeight - menuSpace * 2, buttonWidth * 2 - menuSpace * 4, buttonHeight, buttonHeight, buttonHeight);
-        if(player.inventory.checkItem(itemDrawable.getItem())) itemDrawable.addCommandButton("MOVE", new MoveItemCommand(itemDrawable, playerInventoryDrawable, inventoryDrawable, buttonGroup));
-        else itemDrawable.addCommandButton("MOVE", new MoveItemCommand(itemDrawable, inventoryDrawable, playerInventoryDrawable, buttonGroup));
+        itemDrawable.addCommandButton("MOVE");
+
+        if(player.inventory.checkItem(itemDrawable.getItem())) itemDrawable.getButtons().getLast().addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                inventory.addItem(player.inventory.takeItem(itemDrawable.getItem()));
+                if(!player.inventory.checkItem(player.getArmor())) player.equipArmor(null);
+                if(!player.inventory.checkItem(player.getWeapon())) player.equipArmor(null);
+                playerInventoryDrawable.hide();
+                inventoryDrawable.hide();
+                playerInventoryDrawable.create();
+                inventoryDrawable.create();
+                playerInventoryDrawable.show();
+                inventoryDrawable.show();
+
+                buttonGroup.clear();
+
+                for(TextButton b : inventoryDrawable.getButtons()) {
+                    buttonGroup.add(b);
+                }
+
+                for(TextButton b : playerInventoryDrawable.getButtons()) {
+                    buttonGroup.add(b);
+                }
+
+                itemDrawable.hide();
+                itemDrawable.create();
+                itemDrawable.show();
+            }
+        });
+        else  itemDrawable.getButtons().getLast().addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                player.inventory.addItem(inventory.takeItem(itemDrawable.getItem()));
+                if(!player.inventory.checkItem(player.getArmor())) player.equipArmor(null);
+                if(!player.inventory.checkItem(player.getWeapon())) player.equipArmor(null);
+                playerInventoryDrawable.hide();
+                inventoryDrawable.hide();
+                playerInventoryDrawable.create();
+                inventoryDrawable.create();
+                playerInventoryDrawable.show();
+                inventoryDrawable.show();
+
+                buttonGroup.clear();
+
+                for(TextButton b : inventoryDrawable.getButtons()) {
+                    buttonGroup.add(b);
+                }
+
+                for(TextButton b : playerInventoryDrawable.getButtons()) {
+                    buttonGroup.add(b);
+                }
+
+                itemDrawable.hide();
+                itemDrawable.create();
+                itemDrawable.show();
+
+            }
+        });
+
+
         itemDrawable.getButtons().getLast().addListener(new UpdateItemListener());
-        itemDrawable.getButtons().getLast().addListener(new ClickListener() {
+      /*  itemDrawable.getButtons().getLast().addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 updateButtonGroup();
+                if(!player.inventory.checkItem(player.getArmor())) player.equipArmor(null);
+                if(!player.inventory.checkItem(player.getWeapon())) player.equipArmor(null);
             }
-        });
+        });*/
         itemDrawable.show();
     }
     private void updateButtonGroup() {
@@ -148,14 +212,14 @@ public class SwapItemsWindow {
         stage.addActor(inventoryLabel);
         playerInventoryDrawable.show();
         inventoryDrawable.show();
-        itemDrawable.show();
+        if(itemDrawable != null) itemDrawable.show();
     }
 
     public void hide() {
         hidden = true;
         playerInventoryDrawable.hide();
         inventoryDrawable.hide();
-        itemDrawable.hide();
+        if(itemDrawable != null) itemDrawable.hide();
         stage.getActors().removeValue(exitButton, true);
         stage.getActors().removeValue(background, true);
         stage.getActors().removeValue(playerInventoryLabel, true);

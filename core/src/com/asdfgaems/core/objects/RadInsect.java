@@ -1,6 +1,5 @@
 package com.asdfgaems.core.objects;
 
-import com.asdfgaems.core.GameObject;
 import com.asdfgaems.core.TileMap;
 import com.asdfgaems.core.World;
 import com.badlogic.gdx.graphics.Texture;
@@ -8,10 +7,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
-import java.util.LinkedList;
 import java.util.List;
 
-public class Slime extends Enemy {
+public class RadInsect extends Enemy {
     public static Texture texture_type_1;
     private static final int RANDOM_WALKING = 1;
     private static final int PLAYER_CHASING = 2;
@@ -25,13 +23,13 @@ public class Slime extends Enemy {
 
     private int chaseTime;
 
-    public Slime(World world, String name, int x, int y) {
+    public RadInsect(World world, String name, int x, int y) {
         super(world, name, x ,y);
         texture = texture_type_1;
         state = RANDOM_WALKING;
         collidable = true;
-        maxHealth = 200.0f;
-        health = 200.0f;
+        maxHealth = 300.0f;
+        health = 300.0f;
         lastPlayerX = 0;
         lastPlayerY = 0;
         chaseTime = 0;

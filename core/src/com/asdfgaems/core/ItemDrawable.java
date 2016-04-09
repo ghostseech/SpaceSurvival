@@ -63,14 +63,8 @@ public class ItemDrawable {
         stage.getActors().removeValue(table, true);
     }
 
-    public void addCommandButton(String text, final Command command) {
+    public void addCommandButton(String text) {
         TextButton button = new TextButton(text, skin);
-        button.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                command.execute();
-            }
-        });
         table.add(button).size(width, buttonHeight/2);
         table.row();
         buttons.add(button);

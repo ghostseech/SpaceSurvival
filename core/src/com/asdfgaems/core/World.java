@@ -3,9 +3,8 @@ package com.asdfgaems.core;
 import com.asdfgaems.core.items.AcessCard;
 import com.asdfgaems.core.items.Armor;
 import com.asdfgaems.core.items.Consumable;
-import com.asdfgaems.core.objects.Chest;
-import com.asdfgaems.core.objects.Door;
-import com.asdfgaems.core.objects.Player;
+import com.asdfgaems.core.items.Weapon;
+import com.asdfgaems.core.objects.*;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapObject;
@@ -15,15 +14,17 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.CancellationException;
 
 public class World {
     private TileMap map;
     public Player player;
-    public HashMap<String, GameObject> gameObjects;
+    public LinkedList<GameObject> gameObjects;
+    public LinkedList<Enemy> enemies;
+    public LinkedList<DroppedItem> droppedItems;
+
     private SpaceSurvival app;
 
     private boolean needProcess;
@@ -36,16 +37,30 @@ public class World {
     }
 
     public void create() {
-        gameObjects = new HashMap<String, GameObject>();
+        gameObjects = new LinkedList<GameObject>();
+        enemies = new LinkedList<Enemy>();
+        droppedItems = new LinkedList<DroppedItem>();
+
         loadMap();
+        droppedItems.add(new DroppedItem(this, "test", new Weapon(Weapon.WEAPON_SHOTGUN), 4, 4));
     }
     public void update(float dt) {
         if(!isActive()) return;
 
         player.update(dt);
 
-        for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
-            entry.getValue().update(dt);
+        for(GameObject g : gameObjects) {
+            g.update(dt);
+        }
+        for(Enemy e : enemies) {
+            e.update(dt);
+        }
+
+        for(Enemy e : enemies) {
+            if(e.getHp() <= 0.0f) {
+                e.death();
+                enemies.remove(e);
+            }
         }
 
         if(needProcess) processTurn();
@@ -59,34 +74,66 @@ public class World {
             timer = player.processTurn();
             return;
         }
-
-        for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
-            if(entry.getValue().needUpdate) {
-                timer = entry.getValue().processTurn();
+        for(GameObject g : gameObjects) {
+            if(g.needUpdate) {
+                timer = g.processTurn();
                 return;
             }
         }
+        for(Enemy e : enemies) {
+            if(e.needUpdate) {
+                timer = e.processTurn();
+                return;
+            }
+        }
+
+        processing = false;
+        if(player.isMoving()) processTurn();
     }
 
     private void processTurn() {
         processing = true;
         player.needUpdate = true;
-        for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
-            entry.getValue().needUpdate = true;
+        for(GameObject g : gameObjects) {
+            g.needUpdate = true;
+        }
+        for(Enemy e : enemies) {
+            e.needUpdate = true;
         }
         needProcess = false;
     }
 
     public void click() {
         if(!isActive()) return;
-        GameObject touched = app.getTocuhed();
+
+        player.move(new LinkedList<Vector2>());
+        GameObject touched = getEnemy(app.getTouchedX(), app.getTouchedY());
+        if(touched == null) touched = getObject(app.getTouchedX(), app.getTouchedY());
+        if(touched == null) touched = getDroppedItem(app.getTouchedX(), app.getTouchedY());
         if(touched != null) {
-            player.action(touched, "", player.getDist(touched));
+            player.action(touched, touched.getIdName(), player.getDist(touched));
+
+            if(touched.getClass() == Chest.class) {
+                if(((Chest)touched).getLevel() == 0) app.gameScreen.showSwapItemsWindow(player, ((Chest)touched).inventory);
+            }
+            if(touched.getClass() == Door.class) {
+                List<Vector2> path = getPath(player.x, player.y, app.getTouchedX(), app.getTouchedY());
+                if(isCollidable(app.getTouchedX(), app.getTouchedY()) && path.size() >=1) path.remove(path.size()-1);
+                player.move(path);
+            }
+            if(touched.getClass() == DroppedItem.class) {
+                if(!player.inventory.isFull()) {
+                    player.inventory.addItem(((DroppedItem)touched).getItem());
+                    droppedItems.remove(touched);
+                }
+            }
         }
 
-        List<Vector2> path = getPath(player.x, player.y, app.getTouchedX(), app.getToucedY());
-        if(isCollidable(app.getTouchedX(), app.getToucedY()) && path.size() >=1) path.remove(path.size()-1);
-        player.move(path);
+        if(touched == null) {
+            List<Vector2> path = getPath(player.x, player.y, app.getTouchedX(), app.getTouchedY());
+            if(isCollidable(app.getTouchedX(), app.getTouchedY()) && path.size() >=1) path.remove(path.size()-1);
+            player.move(path);
+        }
     }
 
 
@@ -95,28 +142,87 @@ public class World {
 
         if(map.getTile(x, y).collidable) return true;
         else {
-            for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
-                if(entry.getValue().x == x && entry.getValue().y == y && entry.getValue().collidable) return true;
+            for(GameObject g: gameObjects) {
+                if(g.x == x && g.y == y && g.collidable) return true;
+            }
+            for(Enemy e: enemies) {
+                if(e.x == x && e.y == y && e.collidable) return true;
             }
             return false;
         }
     }
 
     public boolean isVisibleFrom(int startx, int starty, int endx, int endy) {
-        for(int x = 0; x < Math.abs(startx - endx); x++) {
-            for(int y = 0; y < Math.abs(starty - endy); y++) {
+        LinkedList<Vector2> coords = new LinkedList<Vector2>();
 
+        int x0 = startx;
+        int y0 = starty;
+
+        int x1 = endx;
+        int y1 = endy;
+
+        boolean steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
+        if(steep) {
+            int tmpx = x0;
+            x0 = y0;
+            y0 = tmpx;
+
+            int tmpy = x1;
+            x1 = y1;
+            y1 = tmpy;
+        }
+
+        if(x0 > x1) {
+            int tmpx = x0;
+            x0 = x1;
+            x1 = tmpx;
+
+            int tmpy = y0;
+            y0 = y1;
+            y1 = tmpy;
+        }
+
+        int dx = x1 - x0;
+        int dy = Math.abs(y1 - y0);
+
+        int error = dx/2;
+        int ystep = (y0 < y1) ? 1 : -1;
+        int y = y0;
+
+        for(int x = x0; x <= x1; x++) {
+            coords.add(new Vector2(steep ? y : x, steep ? x : y));
+            error -= dy;
+            if(error < 0) {
+                y += ystep;
+                error += dx;
             }
         }
+
+        for(int i = 0; i < coords.size(); i ++) {
+            if(map.getTile((int)coords.get(i).x, (int)coords.get(i).y).collidable) return false;
+        }
+
+        for(int i = 0; i < coords.size(); i ++) {
+            GameObject object = getObject((int)coords.get(i).x, (int)coords.get(i).y);
+            if(object != null) {
+                if(object.collidable) return false;
+            }
+        }
+
         return true;
     }
-
 
     public void draw(SpriteBatch batch) {
         map.draw(batch);
         player.draw(batch);
-        for(Map.Entry<String, GameObject> entry : gameObjects.entrySet()) {
-            entry.getValue().draw(batch);
+        for(GameObject g : gameObjects) {
+            g.draw(batch);
+        }
+        for(Enemy e : enemies) {
+            e.draw(batch);
+        }
+        for(DroppedItem e : droppedItems) {
+            e.draw(batch);
         }
     }
     public void loadMap() {
@@ -165,24 +271,31 @@ public class World {
             int y = (int)(object.getProperties().get("y", Float.class) / 32.0f) + 1;
 
             String type = object.getProperties().get("type", String.class);
+            String name = object.getProperties().get("name", String.class);
             if(type.equals("player")) {
-                player = new Player(this, x, y);
+                player = new Player(this, name, x, y);
                 player.inventory = new Inventory(20);
                 String items = object.getProperties().get("items", String.class);
                 parseItems(items, player.inventory);
             }
             else if(type.equals("door")) {
                 int doorLevel = Integer.parseInt(object.getProperties().get("level", String.class));
-                gameObjects.put(object.getName(), new Door(this, x, y, doorLevel));
+                gameObjects.add(new Door(this, name, x, y, doorLevel));
             }
             else if(type.equals("chest")) {
                 int chestLevel = Integer.parseInt(object.getProperties().get("level", String.class));
-                Chest chest = new Chest(this, x, y, chestLevel);
+                Chest chest = new Chest(this, name, x, y, chestLevel);
 
                 String items = object.getProperties().get("items", String.class);
                 parseItems(items, chest.inventory);
 
-                gameObjects.put(object.getName(), chest);
+                gameObjects.add(chest);
+            }
+            else if(type.equals("slime")) {
+                enemies.add(new Slime(this, name, x, y));
+            }
+            else if(type.equals("radinsect")) {
+                enemies.add(new RadInsect(this, name, x, y));
             }
         }
     }
@@ -193,10 +306,45 @@ public class World {
             if(s.equals("card_1")) inv.addItem(new AcessCard(1));
             if(s.equals("card_2")) inv.addItem(new AcessCard(2));
             if(s.equals("card_3")) inv.addItem(new AcessCard(3));
+
             if(s.equals("armor_base")) inv.addItem(new Armor(Armor.ARMOR_BASE));
             if(s.equals("food_ration_1")) inv.addItem(new Consumable(Consumable.FOOD_RATION_1));
             if(s.equals("health_1")) inv.addItem(new Consumable(Consumable.HEALTH_1));
+
+            if(s.equals("antirad_mixture")) inv.addItem(new Consumable(Consumable.ANTIRAD_MIXTURE));
+            if(s.equals("antitoxic_mixture")) inv.addItem(new Consumable(Consumable.ANTITOXIC_MIXTURE));
+            if(s.equals("attention_mixture")) inv.addItem(new Consumable(Consumable.ATTENTION_MIXTURE));
+            if(s.equals("hpregen_mixture")) inv.addItem(new Consumable(Consumable.REGEN_MIXTURE));
+
+
+            if(s.equals("knife")) inv.addItem(new Weapon(Weapon.WEAPON_KNIFE));
+            if(s.equals("security_gun")) inv.addItem(new Weapon(Weapon.WEAPON_SECURITY_GUN));
+            if(s.equals("rapidgun")) inv.addItem(new Weapon(Weapon.WEAPON_RAPIDGUN));
+            if(s.equals("army_rifle")) inv.addItem(new Weapon(Weapon.WEAPON_ARMY_RIFLE));
+            if(s.equals("shotgun")) inv.addItem(new Weapon(Weapon.WEAPON_SHOTGUN));
+            if(s.equals("plasmagun")) inv.addItem(new Weapon(Weapon.WEAPON_PLASMAGUN));
         }
+    }
+
+    public GameObject getObject(int x, int y) {
+        for(GameObject g : gameObjects) {
+            if(g.x == x && g.y == y) return g;
+        }
+        return null;
+    }
+
+    public Enemy getEnemy(int x, int y) {
+        for(Enemy e : enemies) {
+            if(e.x == x && e.y == y) return e;
+        }
+        return null;
+    }
+
+    public DroppedItem getDroppedItem(int x, int y) {
+        for(DroppedItem e : droppedItems) {
+            if(e.x == x && e.y == y) return e;
+        }
+        return null;
     }
 
     public List<Vector2> getPath(int startx, int starty, int endx, int endy) {
@@ -205,7 +353,7 @@ public class World {
     }
 
     public void requestTurnProcess() {
-        needProcess = true;
+        if(!processing)needProcess = true;
     }
     public boolean isActive() {
         return active;
@@ -224,6 +372,12 @@ public class World {
     public int getMapHeight() {
         return map.height;
     }
+
+    public void cancelPlayerMoveing() {
+        player.move(new LinkedList<Vector2>());
+    }
+
+
 
     public void dispose() {
         gameObjects.clear();

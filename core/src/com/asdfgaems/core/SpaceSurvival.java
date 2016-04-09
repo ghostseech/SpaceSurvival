@@ -1,5 +1,6 @@
 package com.asdfgaems.core;
 
+import com.asdfgaems.core.objects.Enemy;
 import com.asdfgaems.core.screens.GameScreen;
 import com.asdfgaems.core.screens.LoadingScreen;
 import com.asdfgaems.core.screens.MenuScreen;
@@ -70,19 +71,9 @@ public class SpaceSurvival extends Game {
         FreeTypeFontGenerator.FreeTypeFontParameter params = new FreeTypeFontGenerator.FreeTypeFontParameter();
 
         params.size = 24;
+        params.genMipMaps = true;
         params.color = Color.BLACK;
         mainFont = generator.generateFont(params);
-    }
-
-    public GameObject getTocuhed() {
-        float mouseX = ((float)Gdx.input.getX() / Gdx.graphics.getWidth() * V_WIDTH + camera.position.x - (float)V_WIDTH/2) / 64.0f;
-        float mouseY = ((1.0f - (float)Gdx.input.getY() / (float)Gdx.graphics.getHeight()) * V_HEIGHT + camera.position.y - (float)V_HEIGHT/2) / 64.0f;
-        int x = (int)mouseX;
-        int y = (int)mouseY;
-        for(Map.Entry<String, GameObject> entry : world.gameObjects.entrySet()) {
-            if(entry.getValue().x == x && entry.getValue().y == y) return entry.getValue();
-        }
-        return null;
     }
 
     public int getTouchedX() {
@@ -90,7 +81,7 @@ public class SpaceSurvival extends Game {
         return (int)mouseX;
     }
 
-    public int getToucedY() {
+    public int getTouchedY() {
         float mouseY = ((1.0f - (float)Gdx.input.getY() / (float)Gdx.graphics.getHeight()) * V_HEIGHT + camera.position.y - (float)V_HEIGHT/2) / 64.0f;
         return (int)mouseY;
     }

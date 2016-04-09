@@ -20,8 +20,8 @@ public class PathFinder {
         if(endx >= world.getMapWidth() || endx < 0 || endy >= world.getMapHeight() || endy < 0) return new LinkedList<Vector2>();
         nodes = prepareMap(world);
         nodes[endx][endy] = new Node(endx, endy);
-
-        if(nodes[endx][endy] == null) return new LinkedList<Vector2>();
+        nodes[startx][starty] = new Node(startx, starty);
+        //if(nodes[endx][endy] == null) return new LinkedList<Vector2>();
 
         openList = new LinkedList<Node>();
         closeList = new LinkedList<Node>();
