@@ -1,7 +1,7 @@
 package com.asdfgaems.android;
 
 import android.os.Bundle;
-import com.asdfgaems.core.SpaceSurvival;
+import com.asdfgaems.screens.App;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 
@@ -10,7 +10,7 @@ public class AndroidLauncher extends AndroidApplication {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         AndroidApplicationConfiguration config= new AndroidApplicationConfiguration();
-        initialize(new SpaceSurvival(), config);
+        initialize(new App(), config);
     }
 
 }

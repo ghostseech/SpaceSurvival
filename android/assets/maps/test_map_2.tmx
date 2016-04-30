@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="32" tileheight="32" nextobjectid="18">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="32" tileheight="32" nextobjectid="23">
  <tileset firstgid="1" name="tiles_test" tilewidth="32" tileheight="32" tilecount="16" columns="16">
   <image source="../tiles_test/tiles_test.png" width="512" height="32"/>
   <tile id="3">
@@ -59,7 +59,11 @@
   </data>
  </layer>
  <objectgroup name="objects">
-  <object id="1" name="enemy_1" type="monster" gid="11" x="384" y="96" width="32" height="32"/>
+  <object id="1" name="enemy_1" type="radinsect" gid="11" x="384" y="96" width="32" height="32">
+   <properties>
+    <property name="level" value="1"/>
+   </properties>
+  </object>
   <object id="2" name="enemy_2" type="slime" gid="12" x="64" y="96" width="32" height="32">
    <properties>
     <property name="level" value="1"/>
@@ -67,22 +71,22 @@
   </object>
   <object id="3" name="player" type="player" gid="15" x="384" y="416" width="32" height="32">
    <properties>
-    <property name="items" value="card_1 card_2 card_3 armor_base health_1 food_ration_1 "/>
+    <property name="items" value="card_1 card_2 card_3 armor_base health_1 knife rapidgun security_gun plasmagun shotgun army_rifle food_ration_1 antirad_mixture antitoxic_mixture attention_mixture hpregen_mixture"/>
    </properties>
   </object>
-  <object id="4" name="chest_1" type="chest" gid="4" x="56" y="465" width="32" height="32">
+  <object id="4" name="chest_1" type="chest" gid="4" x="62" y="476" width="32" height="32">
    <properties>
     <property name="items" value="card_3 card_1"/>
     <property name="level" value="1"/>
    </properties>
   </object>
-  <object id="9" name="chest_2" type="chest" gid="5" x="98" y="465" width="32" height="32">
+  <object id="9" name="chest_2" type="chest" gid="5" x="94" y="473" width="32" height="32">
    <properties>
     <property name="items" value=""/>
     <property name="level" value="2"/>
    </properties>
   </object>
-  <object id="10" name="chest_3" type="chest" gid="6" x="144" y="466" width="32" height="32">
+  <object id="10" name="chest_3" type="chest" gid="6" x="159" y="475" width="32" height="32">
    <properties>
     <property name="items" value="card_2 card_3"/>
     <property name="level" value="3"/>
@@ -106,6 +110,18 @@
   <object id="17" name="door_4" type="door" gid="7" x="320" y="448" width="32" height="32">
    <properties>
     <property name="level" value="0"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup name="ailayer">
+  <object id="21" name="marker2" type="ai_move_marker" x="64" y="320" width="32" height="32">
+   <properties>
+    <property name="next_point" value="marker1"/>
+   </properties>
+  </object>
+  <object id="22" name="marker1" type="ai_move_marker" x="64" y="128" width="32" height="32">
+   <properties>
+    <property name="next_point" value="marker2"/>
    </properties>
   </object>
  </objectgroup>
