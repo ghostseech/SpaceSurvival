@@ -1,7 +1,7 @@
 package com.asdfgaems.desktop;
 
-import com.asdfgaems.screens.App;
-import com.asdfgaems.screens.Vars;
+import com.asdfgaems.App;
+import com.asdfgaems.Vars;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 
@@ -11,6 +11,6 @@ public class DesktopLauncher {
         config.title = "SpaceStationEscape";
         config.width = Vars.WIDTH;
         config.height = Vars.HEIGHT;
-        new LwjglApplication(new App(), config);
+        new LwjglApplication(new App(true), config);
     }
 }

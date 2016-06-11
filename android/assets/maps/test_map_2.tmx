@@ -71,7 +71,7 @@
   </object>
   <object id="3" name="player" type="player" gid="15" x="384" y="416" width="32" height="32">
    <properties>
-    <property name="items" value="card_1 card_2 card_3 armor_base health_1 knife rapidgun security_gun plasmagun shotgun army_rifle food_ration_1 antirad_mixture antitoxic_mixture attention_mixture hpregen_mixture"/>
+    <property name="items" value="medkit_1 medkit_1 medkit_1 medkit_1 card_1 card_2 card_3 armor_base health_1 knife rapidgun security_gun plasmagun shotgun army_rifle food_ration_1 antirad_mixture antitoxic_mixture attention_mixture hpregen_mixture"/>
    </properties>
   </object>
   <object id="4" name="chest_1" type="chest" gid="4" x="62" y="476" width="32" height="32">
